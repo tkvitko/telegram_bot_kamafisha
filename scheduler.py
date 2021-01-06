@@ -2,12 +2,14 @@
 
 import asyncio
 import time
+import configparser
 
 import aioschedule as schedule
 from pymongo import MongoClient
 from telethon.sync import TelegramClient
 
 from tg_bot import get_today, get_and_send_news, get_and_send_events
+
 
 mongo_con_string = 'mongodb://localhost:27017'
 db_client = MongoClient(mongo_con_string)
@@ -42,9 +44,11 @@ async def send_events(bot):
 
 if __name__ == '__main__':
 
-    bot_token = ''
-    api_id = 0
-    api_hash = ''
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    bot_token = (config["bot"]["bot_token"])
+    api_id = (config["bot"]["api_id"])
+    api_hash = (config["bot"]["api_hash"])
 
     bot = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 

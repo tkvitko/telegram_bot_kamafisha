@@ -1,6 +1,7 @@
 #!/usr/bin/python3.6
 
 import logging
+import configparser
 from datetime import datetime, timedelta
 
 from pymongo import MongoClient, errors
@@ -284,8 +285,11 @@ def work_with_chat(api_id, api_hash, bot_token):
 
 
 if __name__ == "__main__":
-    bot_token = ''  # prod
-    api_id = 0
-    api_hash = ''
+
+    config = configparser.ConfigParser()
+    config.read("config.ini")
+    bot_token = (config["bot"]["bot_token"])
+    api_id = (config["bot"]["api_id"])
+    api_hash = (config["bot"]["api_hash"])
 
     work_with_chat(api_id, api_hash, bot_token)
