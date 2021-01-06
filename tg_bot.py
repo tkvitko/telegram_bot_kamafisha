@@ -1,17 +1,20 @@
+#!/usr/bin/python3.6
+
+import logging
+from datetime import datetime, timedelta
+
 from pymongo import MongoClient, errors
+from pytz import timezone
 from telethon import TelegramClient, events
-from telethon.tl.types import MessageActionChatEditTitle, MessageActionChatAddUser, MessageMediaGeo
 from telethon.tl.custom import Button
 
-from datetime import datetime, timedelta
-from pytz import timezone
-
-from sql_connection import get_news_from_db, get_events_from_db_by_date, get_events_from_db_by_category
 from cache import get_from_cache, put_to_cache
+from sql_connection import get_news_from_db, get_events_from_db_by_date, get_events_from_db_by_category
 
 mongo_con_string = 'mongodb://localhost:27017'
 db_client = MongoClient(mongo_con_string)
 db = db_client['users_kamafisha']
+logging.basicConfig(filename='bot.log')
 
 date_limit = '2020-07-01'  # минимальная дата при обращении в SQL, чтобы не перегружать ответ
 max_elements = 20  # максимальное количество элементов в ответе, чтобы телеграмм пропустил сообщение
@@ -22,6 +25,11 @@ TOMORROW = 'Афиша на завтра'
 AFTER_TOMORROW = 'Афиша на послезавтра'
 CATEGORIES = 'Категории'
 NEWS = 'Новости'
+ABOUT = 'О боте'
+
+ABOUT_TEXT = """Бот http://kamafisha.ru/
+Разработка: @taraskvitko
+"""
 
 
 def get_categories_list():
@@ -50,7 +58,7 @@ def get_news(date):
         data = get_news_from_db(date)
 
         for item in data:
-            new_string = f'{item[1]}\n{item[2]}\n'
+            new_string = f'{item[1]}\n{item[2]}\n\n'
             news_message += new_string
 
         # Кладем в кеш
@@ -68,7 +76,7 @@ def get_events(date, category=None, category_name=None):
             events_message = f'Мероприятия категории {category_name}:\n\n'
             data = get_events_from_db_by_category(category, date, date_limit)
             for item in data[:max_elements]:
-                new_string = f'{item[1]}\n{item[2]}\nДата начала: {item[3].split(" ")[0]}\n'
+                new_string = f'{item[1]}\n{item[2]}\nДата начала: {item[3].split(" ")[0]}\n\n'
                 events_message += new_string
             # Кешируем
             put_to_cache(events_message, 'events', date, category)
@@ -82,7 +90,7 @@ def get_events(date, category=None, category_name=None):
             events_message = f'Мероприятия на {date}:\n\n'
             data = get_events_from_db_by_date(date, date_limit)
             for item in data[:max_elements]:
-                new_string = f'{item[1]}\n{item[2]}\nДата начала: {item[3].split(" ")[0]}\n'
+                new_string = f'{item[1]}\n{item[2]}\nДата начала: {item[3].split(" ")[0]}\n\n'
                 events_message += new_string
             # Кешируем
             put_to_cache(events_message, 'events', date)
@@ -139,6 +147,7 @@ async def send_events_for_category(event, bot, delta, category, category_name):
     # Функция отправки событий для категории
 
     chat_id = event.message.chat.id
+    logging.warning(f'got EVENTS from {chat_id}')
     request_date = get_today() + timedelta(days=delta)
     await get_and_send_events(bot=bot, user=chat_id, date=request_date.strftime('%Y-%m-%d'), category=category,
                               category_name=category_name)
@@ -171,11 +180,16 @@ def press_event(user_id):
 async def welcome_board(bot, chat_id):
     # Start keyboard
     await bot.send_message(chat_id, 'Выберите действие:', buttons=[
-        Button.text(TODAY, resize=True, single_use=True),
-        Button.text(TOMORROW, resize=True, single_use=True),
-        Button.text(AFTER_TOMORROW, resize=True, single_use=True),
-        Button.text(CATEGORIES, resize=True, single_use=True),
-        Button.text(NEWS, resize=True, single_use=True)
+        [
+            Button.text(TODAY, resize=True, single_use=True),
+            Button.text(TOMORROW, resize=True, single_use=True),
+            Button.text(AFTER_TOMORROW, resize=True, single_use=True)
+        ],
+        [
+            Button.text(CATEGORIES, resize=True, single_use=True),
+            Button.text(NEWS, resize=True, single_use=True),
+            Button.text(ABOUT, resize=True, single_use=True)
+        ]
     ])
 
 
@@ -187,17 +201,10 @@ def work_with_chat(api_id, api_hash, bot_token):
     async def handler(event):
 
         chat_id = event.message.chat.id
+        logging.warning(f'got /start from {chat_id}')
 
         # Start keyboard
         await welcome_board(bot, chat_id)
-
-        # welcome_message = 'Привет!\n' \
-        #                   'Со мной можно общаться такими командами:\n' \
-        #                   '/today - посмотреть события на сегодня\n' \
-        #                   '/tomorrow - посмотреть события на завтра\n' \
-        #                   '/after_tomorrow - посмотреть события на послезавтра\n' \
-        #                   '/by_category - посмотреть все события категории\n' \
-        #                   '/news - посмотреть сегодняшние новости\n'
 
         # Сохранение пользователя в базу (для рассылок)
         save_user_to_mongo(chat_id)
@@ -206,9 +213,18 @@ def work_with_chat(api_id, api_hash, bot_token):
     # Новости за сегодня
     async def handler(event):
         chat_id = event.message.chat.id
+        logging.warning(f'got NEWS from {chat_id}')
         request_date = get_today()
         await get_and_send_news(bot=bot, user=chat_id, date=request_date.strftime('%Y-%m-%d'))
         # await get_and_send_news(bot=bot, user=chat_id, date='2020-12-18')
+        await welcome_board(bot, chat_id)
+
+    @bot.on(events.NewMessage(pattern=ABOUT))
+    # О боте
+    async def handler(event):
+        chat_id = event.message.chat.id
+        logging.warning(f'got ABOUT from {chat_id}')
+        await bot.send_message(chat_id, ABOUT_TEXT)
         await welcome_board(bot, chat_id)
 
     @bot.on(events.NewMessage(pattern=TODAY))
@@ -233,9 +249,10 @@ def work_with_chat(api_id, api_hash, bot_token):
         sender = await event.get_sender()
         sender_id = sender.id
         chat_id = event.message.chat.id
+        logging.warning(f'got CATEGORIES from {chat_id}')
 
         categories = get_categories_list()
-        buttons = [Button.inline(k, v) for k, v in categories.items()]
+        buttons = [[Button.inline(k, v)] for k, v in categories.items()]
 
         async with bot.conversation(chat_id) as conv:
             await conv.send_message('Выберите категорию',
@@ -253,6 +270,7 @@ def work_with_chat(api_id, api_hash, bot_token):
         sender = await event.get_sender()
         sender_id = sender.id
         chat_id = event.message.chat.id
+        logging.warning(f'got ADMIN_MESSAGE from {chat_id}')
 
         async with bot.conversation(chat_id) as conv:
             await conv.send_message('Введите сообщение для отправки всем пользователям бота:')
@@ -266,12 +284,8 @@ def work_with_chat(api_id, api_hash, bot_token):
 
 
 if __name__ == "__main__":
-    # bot_token = '1411569010:AAFPGRk5gZaEQ5k0yFZ0Co9LE7YTXymtR8o'  # prod
-    # api_id = 1541643
-    # api_hash = '10aff92c98b1ef882c9b85edb8117781'
-
-    bot_token = '1208251813:AAHDznm1Rugi6Uu5sgSJ_Olc6_3gkMWhsts'  # tkvitko
-    api_id = 1541643
-    api_hash = '10aff92c98b1ef882c9b85edb8117781'
+    bot_token = ''  # prod
+    api_id = 0
+    api_hash = ''
 
     work_with_chat(api_id, api_hash, bot_token)

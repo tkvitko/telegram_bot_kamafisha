@@ -1,8 +1,10 @@
+import os
 import pathlib
 import time
-import os
 
 CACHE_TIME = 24 * 60 * 60
+
+
 # CACHE_TIME = 60
 
 
@@ -37,7 +39,7 @@ def get_from_cache(data_type, date, category=None):
     try:
         file_props = pathlib.Path(cache_file)
         # время создания кеша
-        creation_time =  file_props.stat().st_mtime
+        creation_time = file_props.stat().st_mtime
         # текущее время
         current_time = time.time()
 
@@ -59,20 +61,12 @@ def get_from_cache(data_type, date, category=None):
 
 
 if __name__ == '__main__':
+    # Тестирование
+    test_data = """Новости:"""
 
-    #test_data = [(38732, 'Генеральный прогон сказки «Иван-царевич и Серый волк»', 'http://pk.kamafisha.ru/generalnyj-progon-skazki-ivan-carevich-i-seryj-volk/'), (38735, 'Мгновения 2020. Фотоотчет.', 'http://pk.kamafisha.ru/mgnoveniya-2020-fotootchet/')]
-
-    test_data = """Новости:
-
-Генеральный прогон сказки «Иван-царевич и Серый волк»
-http://pk.kamafisha.ru/generalnyj-progon-skazki-ivan-carevich-i-seryj-volk/
-Мгновения 2020. Фотоотчет.
-http://pk.kamafisha.ru/mgnoveniya-2020-fotootchet/
-    """
-
-    put_to_cache(data=test_data,
-                 data_type='events',
-                 date='2020-12-19')
+    # put_to_cache(data=test_data,
+    #              data_type='events',
+    #              date='2020-12-19')
 
     # print(get_from_cache(data_type='news',
     #                      date='2020-12-19'))

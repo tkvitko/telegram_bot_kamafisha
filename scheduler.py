@@ -1,3 +1,5 @@
+#!/usr/bin/python3.6
+
 import asyncio
 import time
 
@@ -13,7 +15,9 @@ db = db_client['users_kamafisha']
 
 # Расписание автоматических рассылок
 TIME_TO_SEND_NEWS = '10:00'
-TIME_TO_SEND_EVENTS = '11:00'
+
+
+# TIME_TO_SEND_EVENTS = '11:00'
 
 
 async def send_news(bot):
@@ -38,18 +42,14 @@ async def send_events(bot):
 
 if __name__ == '__main__':
 
-    # bot_token = '1411569010:AAFPGRk5gZaEQ5k0yFZ0Co9LE7YTXymtR8o'  # prod
-    # api_id = 1541643
-    # api_hash = '10aff92c98b1ef882c9b85edb8117781'
-
-    bot_token = '1208251813:AAHDznm1Rugi6Uu5sgSJ_Olc6_3gkMWhsts'  # tkvitko
-    api_id = 1541643
-    api_hash = '10aff92c98b1ef882c9b85edb8117781'
+    bot_token = ''
+    api_id = 0
+    api_hash = ''
 
     bot = TelegramClient('bot', api_id, api_hash).start(bot_token=bot_token)
 
     schedule.every().day.at(TIME_TO_SEND_NEWS).do(send_news, bot=bot)
-    schedule.every().day.at(TIME_TO_SEND_EVENTS).do(send_events, bot=bot)
+    # schedule.every().day.at(TIME_TO_SEND_EVENTS).do(send_events, bot=bot)
 
     loop = asyncio.get_event_loop()
 
