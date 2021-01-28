@@ -8,7 +8,7 @@ CACHE_TIME = 24 * 60 * 60
 # CACHE_TIME = 60
 
 
-def put_to_cache(data, data_type, date, category=None):
+def put_to_cache(data, data_type, date=None, category=None):
     # Фукнция сохранения ответа в кеш
 
     if not category:
@@ -26,7 +26,7 @@ def put_to_cache(data, data_type, date, category=None):
     print(f'{data_type} for {date} has been saved to {cache_file}')
 
 
-def get_from_cache(data_type, date, category=None):
+def get_from_cache(data_type, date=None, category=None):
     # Функция взятия ответа из кеша с учетом устаревания
 
     if not category:
