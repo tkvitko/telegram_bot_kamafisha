@@ -127,7 +127,7 @@ def get_news(date):
     if not news_message:
         # Взятие из базы
         news_message = 'Новости:\n\n'
-        data = get_news_from_db()
+        data = get_news_from_db(date_limit=date)
 
         for item in data:
             new_string = f'{item[1]}\n{item[2]}\n\n'

@@ -21,7 +21,7 @@ POST_TYPE_EVENTS = 'tribe_events'
 TERM_ID_FIELD_NAME = 'term_taxonomy_id'
 
 
-def get_news_from_db():
+def get_news_from_db(date_limit):
     # Получение новостей
 
     with sshtunnel.SSHTunnelForwarder(
@@ -48,7 +48,9 @@ def get_news_from_db():
         # Получение последних 15 новостей
         query = f'''
         SELECT id, post_title, guid from {POSTS_TABLE} 
-        WHERE post_type = '{POST_TYPE_NEWS}' ORDER BY post_date DESC limit 15
+        WHERE post_type = '{POST_TYPE_NEWS}' 
+        AND post_date >='{date_limit} 00:00:00'
+        ORDER BY post_date DESC limit 15
         '''
         cursor = connection.cursor()
         cursor.execute(query)
