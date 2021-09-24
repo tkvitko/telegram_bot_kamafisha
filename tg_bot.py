@@ -16,7 +16,7 @@ from sql_connection import get_news_from_db_by_category
 
 mongo_con_string = 'mongodb://localhost:27017'
 db_client = MongoClient(mongo_con_string)
-db = db_client['users_kamafisha']
+db = db_client['users_lefortovo']
 logging.basicConfig(filename='bot.log')
 
 date_limit = '2020-07-01'  # минимальная дата при обращении в SQL, чтобы не перегружать ответ
