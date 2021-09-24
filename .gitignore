@@ -2,7 +2,7 @@
 venv*
 __pycache__
 help.txt
-bot.session*
+*.session*
 cache/*
 config.ini
 bot.log

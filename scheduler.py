@@ -19,6 +19,7 @@ db = db_client['users_kamafisha']
 
 MAIN_NEWS_ID = 5
 BLOG_ID = 308
+WORKING_HOURS = list(range(9, 20))
 
 # Расписание автоматических рассылок
 # TIME_TO_SEND_NEWS = '10:00'
@@ -48,39 +49,43 @@ BLOG_ID = 308
 async def send_lefortovo(bot):
     # отправка новостей категорй Главный и Блог редакции
 
-    logger.warning('Start task')
-    # время, за которое получаем новости
-    time_from = get_today() - timedelta(hours=1)
-    time_from = time_from.strftime('%Y-%m-%d %H:%M:%S')
-    logger.warning(f'Getting news from {time_from}')
+    current_time = get_today()
+    current_hour = current_time.hour
+    if current_hour in WORKING_HOURS:
 
-    # кортежи новостей из базы
-    data = []
-    for category_id in [MAIN_NEWS_ID, BLOG_ID]:
-        items = get_news_from_db_by_category_by_time(category_id=category_id,
-                                                     time_limit=time_from)
-        for item in items:
-            data.append(item)
+        logger.warning('Start task')
+        # время, за которое получаем новости
+        time_from = get_today() - timedelta(hours=1)
+        time_from = time_from.strftime('%Y-%m-%d %H:%M:%S')
+        logger.warning(f'Getting news from {time_from}')
 
-    logger.warning(f'Got {len(data)} new itmes to send')
+        # кортежи новостей из базы
+        data = []
+        for category_id in [MAIN_NEWS_ID, BLOG_ID]:
+            items = get_news_from_db_by_category_by_time(category_id=category_id,
+                                                         time_limit=time_from)
+            for item in items:
+                data.append(item)
 
-    if len(data) != 0:
-        # формирование сообщения для рассылки
-        news_message = ''
-        for item in data:
-            new_string = f'{item[1]}\n{item[2]}\n\n'
-            news_message += new_string
+        logger.warning(f'Got {len(data)} new itmes to send')
 
-        # получение всех пользователей сервиса
-        users_list = db.users.find()
+        if len(data) != 0:
+            # формирование сообщения для рассылки
+            news_message = ''
+            for item in data:
+                new_string = f'{item[1]}\n{item[2]}\n\n'
+                news_message += new_string
 
-        # отправка сообщения всем пользователям сервиса:
-        for recipient in users_list:
-            try:
-                await bot.send_message(recipient, news_message)
-                logger.warning(f'Message has been sent to {recipient}')
-            except Exception as e:
-                logger.warning(f'Cant send message to {recipient}: {e}')
+            # получение всех пользователей сервиса
+            users_list = db.users.find()
+
+            # отправка сообщения всем пользователям сервиса:
+            for recipient in users_list:
+                try:
+                    await bot.send_message(recipient, news_message)
+                    logger.warning(f'Message has been sent to {recipient}')
+                except Exception as e:
+                    logger.warning(f'Cant send message to {recipient}: {e}')
 
 
 if __name__ == '__main__':
