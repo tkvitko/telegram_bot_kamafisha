@@ -17,7 +17,10 @@ from sql_connection import get_news_from_db_by_category
 mongo_con_string = 'mongodb://localhost:27017'
 db_client = MongoClient(mongo_con_string)
 db = db_client['users_lefortovo']
-logging.basicConfig(filename='bot.log')
+# logging.basicConfig(filename='bot.log')
+logging.basicConfig(filename='./bot.log', level=logging.INFO,
+                    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%d-%b-%y %H:%M:%S')
+logger = logging.getLogger(__name__)  # Using this object will be better
 
 date_limit = '2020-07-01'  # минимальная дата при обращении в SQL, чтобы не перегружать ответ
 max_elements = 20  # максимальное количество элементов в ответе, чтобы телеграмм пропустил сообщение
@@ -64,16 +67,16 @@ ABOUT_TEXT = """
 CINEMA_CAT_ID = 122
 
 
-def get_categories_list():
+def get_events_categories_list():
     # Функция, определяющая категории событий
 
     prod_list = {
-        'Новости': b'1',
-        'Общество': b'2',
-        'Культура': b'3',
-        'ЖКЖ': b'4',
-        'Главные новости': b'5',
-        'Органы власти': b'6',
+        # 'Новости': b'1',
+        # 'Общество': b'2',
+        # 'Культура': b'3',
+        # 'ЖКЖ': b'4',
+        # 'Главные новости': b'5',
+        # 'Органы власти': b'6',
         'Концерты': b'7',
         'Обучение': b'8',
         'Спектакли': b'9',
@@ -81,13 +84,37 @@ def get_categories_list():
         'Выставки': b'11',
         'Кино': b'12',
         'Спорт': b'13',
-        'Учреждения культуры': b'14',
-        'Кинотеатры': b'15',
+        # 'Учреждения культуры': b'14',
+        # 'Кинотеатры': b'15',
         # 'Спорт': b'16',
+        # 'Политика': b'17',
+        # 'Транспорт': b'18',
+        # 'Главное': b'19',
+        # 'Торговля и услуги': b'20',
+        # 'Блог редакции': b'308'
+    }
+
+    return prod_list
+
+
+def get_news_categories_list():
+    # Функция, определяющая категории событий
+
+    prod_list = {
+        'Новости': b'1',
+        'Общество': b'2',
+        'Культура': b'3',
+        'ЖКЖ': b'4',
+        'Спорт': b'16',
         'Политика': b'17',
         'Транспорт': b'18',
-        'Главное': b'19',
-        'Торговля и услуги': b'20'
+        'Торговля и услуги': b'20',
+        'Наш район': b'282',
+        'История': b'283',
+        'Люди': b'284',
+        'Достопримечательности': b'285',
+        'Здоровье': b'301',
+        'Благоустройство и строительство': b'309'
     }
 
     return prod_list
@@ -114,11 +141,12 @@ def get_news(date):
 def get_news_by_category(category_id):
     # Взятие из кеша
     news_message = get_from_cache('news', category=category_id)
-    news_message = None
+    # news_message = None
 
     if not news_message:
         # Взятие из базы
-        news_message = 'Новости:\n\n'
+        # news_message = 'Новости:\n\n'
+        news_message = ''
         data = get_news_from_db_by_category(category_id=category_id, date_limit=date_limit)
 
         for item in data:
@@ -398,7 +426,7 @@ def work_with_chat(api_id, api_hash, bot_token):
         chat_id = event.message.chat.id
         logging.warning(f'got CATEGORIES from {chat_id}')
 
-        categories = get_categories_list()
+        categories = get_events_categories_list()
         buttons = [[Button.inline(k, v)] for k, v in categories.items()]
 
         async with bot.conversation(chat_id) as conv:
@@ -422,13 +450,12 @@ def work_with_chat(api_id, api_hash, bot_token):
         chat_id = event.message.chat.id
         logging.warning(f'got DIGEST from {chat_id}')
 
-        categories = get_categories_list()
+        categories = get_news_categories_list()
         for k, v in categories.items():
             await bot.send_message(chat_id, k)
             await get_and_send_news_by_category(bot, chat_id, int(v))
 
         await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_NEWS)
-
 
     # @bot.on(events.NewMessage(pattern=CINEMA))
     # # Расписание киносеансов
