@@ -211,9 +211,17 @@ def get_events_from_db_by_category(category_id, date_string, date_limit):
         ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
         WHERE t1.meta_key='_EventStartDate'
         ) t3
-        WHERE 
+        WHERE
         t3.end_date >='{date_string} 00:00:00'
         '''
+        # query = f'''
+        # SELECT p.id, p.post_title, p.guid from {POSTS_TABLE} p
+        # JOIN {TERM_RELATIONSHIPS_TABLE} r ON p.ID = r.object_id
+        # WHERE (post_type='{POST_TYPE_EVENTS}') AND
+        # r.{TERM_ID_FIELD_NAME} = {category_id} AND
+        # (post_date >='{date_limit} 00:00:00')
+        # order by p.id DESC limit 5
+        # '''
         cursor = connection.cursor()
         cursor.execute(query)
         data = cursor.fetchall()
