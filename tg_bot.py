@@ -12,6 +12,7 @@ from telethon.tl.custom import Button
 from cache import get_from_cache, put_to_cache
 from sql_connection import get_news_from_db, get_events_from_db_by_date, get_events_from_db_by_category
 from sql_connection import get_cinema_from_db_all, get_cinema_from_db_by_date
+from sql_connection import get_news_from_db_by_category
 
 mongo_con_string = 'mongodb://localhost:27017'
 db_client = MongoClient(mongo_con_string)
@@ -22,16 +23,42 @@ date_limit = '2020-07-01'  # минимальная дата при обраще
 max_elements = 20  # максимальное количество элементов в ответе, чтобы телеграмм пропустил сообщение
 
 # Названия кнопок меню
-TODAY = 'Афиша на сегодня'
-TOMORROW = 'Афиша на завтра'
+TODAY_NEWS = 'Новости за сегодня'
+TODAY = 'Сегодня'
+TODAY_AFFICHE = 'Афиша на сегодня'
+TOMORROW_AFFICHE = 'Афиша на завтра'
 AFTER_TOMORROW = 'Афиша на послезавтра'
 CATEGORIES = 'Категории мероприятий'
 NEWS = 'Новости'
 ABOUT = 'О боте'
 CINEMA = 'Кино'
+AFFICHE = 'Афиша'
+DIGEST = 'Дайджест'
+BACK = 'Назад'
+CHOOSE_ACTION = 'Выберите действие:'
 
-ABOUT_TEXT = """Бот http://kamafisha.ru/
-Разработка: @taraskvitko
+MENU_MAIN = [
+    Button.text(NEWS, resize=True, single_use=True),
+    Button.text(AFFICHE, resize=True, single_use=True),
+    Button.text(ABOUT, resize=True, single_use=True)
+]
+
+MENU_NEWS = [
+    Button.text(TODAY_NEWS, resize=True, single_use=True),
+    Button.text(DIGEST, resize=True, single_use=True),
+    Button.text(BACK, resize=True, single_use=True)
+]
+
+MENU_AFFICHE = [
+    Button.text(TODAY_AFFICHE, resize=True, single_use=True),
+    Button.text(TOMORROW_AFFICHE, resize=True, single_use=True),
+    Button.text(CATEGORIES, resize=True, single_use=True),
+    Button.text(BACK, resize=True, single_use=True)
+]
+
+ABOUT_TEXT = """
+Бот информационного сайта "Лефортовец" (lefortovo.today). 
+Новости и афиша мероприятий района Левортово города Москва
 """
 
 CINEMA_CAT_ID = 122
@@ -41,13 +68,26 @@ def get_categories_list():
     # Функция, определяющая категории событий
 
     prod_list = {
-        'Выставки': b'25',
-        'Прочие': b'26',
-        'Встречи': b'27',
-        'Спектакли': b'28',
-        'Концерты': b'29',
-        'Обучение': b'30',
-        'Праздники': b'31'
+        'Новости': b'1',
+        'Общество': b'2',
+        'Культура': b'3',
+        'ЖКЖ': b'4',
+        'Главные новости': b'5',
+        'Органы власти': b'6',
+        'Концерты': b'7',
+        'Обучение': b'8',
+        'Спектакли': b'9',
+        'Праздники': b'10',
+        'Выставки': b'11',
+        'Кино': b'12',
+        'Спорт': b'13',
+        'Учреждения культуры': b'14',
+        'Кинотеатры': b'15',
+        # 'Спорт': b'16',
+        'Политика': b'17',
+        'Транспорт': b'18',
+        'Главное': b'19',
+        'Торговля и услуги': b'20'
     }
 
     return prod_list
@@ -68,6 +108,25 @@ def get_news(date):
 
         # Кладем в кеш
         put_to_cache(news_message, 'news', date)
+    return news_message
+
+
+def get_news_by_category(category_id):
+    # Взятие из кеша
+    news_message = get_from_cache('news', category=category_id)
+    news_message = None
+
+    if not news_message:
+        # Взятие из базы
+        news_message = 'Новости:\n\n'
+        data = get_news_from_db_by_category(category_id=category_id, date_limit=date_limit)
+
+        for item in data:
+            new_string = f'{item[1]}\n{item[2]}\n\n'
+            news_message += new_string
+
+        # Кладем в кеш
+        put_to_cache(news_message, 'news', category=category_id)
     return news_message
 
 
@@ -197,6 +256,7 @@ async def send_cinema(event, bot, delta=None):
 async def get_and_send_news(bot, user, date=None):
     # Получение событий из кеша и отправка
     data = get_news(date=date)
+    # print(data)
     await send_message(bot=bot, message=data, user=user)
 
 
@@ -206,7 +266,7 @@ async def send_events_for_date(event, bot, delta, category=None):
     chat_id = event.message.chat.id
     request_date = get_today() + timedelta(days=delta)
     await get_and_send_events(bot=bot, user=chat_id, date=request_date.strftime('%Y-%m-%d'), category=category)
-    await welcome_board(bot, chat_id)
+    # await welcome_board(bot, chat_id)
 
 
 async def send_events_for_category(event, bot, delta, category, category_name):
@@ -218,7 +278,14 @@ async def send_events_for_category(event, bot, delta, category, category_name):
     request_date = get_today() + timedelta(days=delta)
     await get_and_send_events(bot=bot, user=chat_id, date=request_date.strftime('%Y-%m-%d'), category=category,
                               category_name=category_name)
-    await welcome_board(bot, chat_id)
+    # await welcome_board(bot, chat_id)
+
+
+async def get_and_send_news_by_category(bot, user, category_id):
+    # Получение событий из кеша и отправка
+    data = get_news_by_category(category_id=category_id)
+    # print(data)
+    await send_message(bot=bot, message=data, user=user)
 
 
 def get_today():
@@ -246,19 +313,8 @@ def press_event(user_id):
 
 async def welcome_board(bot, chat_id):
     # Start keyboard
-    await bot.send_message(chat_id, 'Выберите действие:', buttons=[
-        [
-            Button.text(TODAY, resize=True, single_use=True),
-            Button.text(TOMORROW, resize=True, single_use=True),
-            Button.text(AFTER_TOMORROW, resize=True, single_use=True)
-        ],
-        [
-            Button.text(CINEMA, resize=True, single_use=True),
-            Button.text(CATEGORIES, resize=True, single_use=True),
-            Button.text(NEWS, resize=True, single_use=True),
-            Button.text(ABOUT, resize=True, single_use=True)
-        ]
-    ])
+
+    await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_MAIN)
 
 
 def work_with_chat(api_id, api_hash, bot_token):
@@ -282,10 +338,41 @@ def work_with_chat(api_id, api_hash, bot_token):
     async def handler(event):
         chat_id = event.message.chat.id
         logging.warning(f'got NEWS from {chat_id}')
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_NEWS)
+
+    @bot.on(events.NewMessage(pattern=TODAY_NEWS))
+    # Новости за сегодня
+    async def handler(event):
+        chat_id = event.message.chat.id
+        logging.warning(f'got TODAY_NEWS from {chat_id}')
         request_date = get_today()
         await get_and_send_news(bot=bot, user=chat_id, date=request_date.strftime('%Y-%m-%d'))
         # await get_and_send_news(bot=bot, user=chat_id, date='2020-12-18')
-        await welcome_board(bot, chat_id)
+        # await welcome_board(bot, chat_id)
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_NEWS)
+
+    @bot.on(events.NewMessage(pattern=AFFICHE))
+    # Новости за сегодня
+    async def handler(event):
+        chat_id = event.message.chat.id
+        logging.warning(f'got AFFICHE from {chat_id}')
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_AFFICHE)
+
+    @bot.on(events.NewMessage(pattern=TODAY_AFFICHE))
+    # Новости за сегодня
+    async def handler(event):
+        chat_id = event.message.chat.id
+        logging.warning(f'got TODAY_AFFICHE from {chat_id}')
+        await send_events_for_date(event, bot, delta=0)
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_AFFICHE)
+
+    @bot.on(events.NewMessage(pattern=TOMORROW_AFFICHE))
+    # Новости за сегодня
+    async def handler(event):
+        chat_id = event.message.chat.id
+        logging.warning(f'got TODAY_AFFICHE from {chat_id}')
+        await send_events_for_date(event, bot, delta=1)
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_AFFICHE)
 
     @bot.on(events.NewMessage(pattern=ABOUT))
     # О боте
@@ -295,20 +382,12 @@ def work_with_chat(api_id, api_hash, bot_token):
         await bot.send_message(chat_id, ABOUT_TEXT)
         await welcome_board(bot, chat_id)
 
-    @bot.on(events.NewMessage(pattern=TODAY))
-    # Афиша на сегодня
+    @bot.on(events.NewMessage(pattern=BACK))
+    # Новости за сегодня
     async def handler(event):
-        await send_events_for_date(event, bot, delta=0)
-
-    @bot.on(events.NewMessage(pattern=TOMORROW))
-    # Афиша на завтра
-    async def handler(event):
-        await send_events_for_date(event, bot, delta=1)
-
-    @bot.on(events.NewMessage(pattern=AFTER_TOMORROW))
-    # Афиша на послезавтра
-    async def handler(event):
-        await send_events_for_date(event, bot, delta=2)
+        chat_id = event.message.chat.id
+        logging.warning(f'got BACK from {chat_id}')
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_MAIN)
 
     @bot.on(events.NewMessage(pattern=CATEGORIES))
     # Афиша по категории
@@ -332,37 +411,56 @@ def work_with_chat(api_id, api_hash, bot_token):
                 if press.data == v:
                     await send_events_for_category(event, bot, delta=0, category=int(v), category_name=k)
 
-    @bot.on(events.NewMessage(pattern=CINEMA))
-    # Расписание киносеансов
+            await conv.send_message(CHOOSE_ACTION, buttons=MENU_AFFICHE)
+
+    @bot.on(events.NewMessage(pattern=DIGEST))
+    # Дайджест новостей
     async def handler(event):
 
         sender = await event.get_sender()
         sender_id = sender.id
         chat_id = event.message.chat.id
-        logging.warning(f'got CINEMA from {chat_id}')
+        logging.warning(f'got DIGEST from {chat_id}')
 
-        cinema_days_list = {
-            'Сегодня': b'0',
-            'Завтра': b'1',
-            'Послезавтра': b'2',
-            'Все': b'-1'
-        }
+        categories = get_categories_list()
+        for k, v in categories.items():
+            await bot.send_message(chat_id, k)
+            await get_and_send_news_by_category(bot, chat_id, int(v))
 
-        buttons = [[Button.inline(k, v)] for k, v in cinema_days_list.items()]
+        await bot.send_message(chat_id, CHOOSE_ACTION, buttons=MENU_NEWS)
 
-        async with bot.conversation(chat_id) as conv:
-            await conv.send_message('Выберите дату',
-                                    buttons=buttons)
 
-            press = await conv.wait_event(press_event(sender_id))
-
-            for k, v in cinema_days_list.items():
-                if press.data == v:
-                    print(press.data)
-                    if press.data == b'-1':
-                        await send_cinema(event, bot)
-                    else:
-                        await send_cinema(event, bot, delta=int(v))
+    # @bot.on(events.NewMessage(pattern=CINEMA))
+    # # Расписание киносеансов
+    # async def handler(event):
+    #
+    #     sender = await event.get_sender()
+    #     sender_id = sender.id
+    #     chat_id = event.message.chat.id
+    #     logging.warning(f'got CINEMA from {chat_id}')
+    #
+    #     cinema_days_list = {
+    #         'Сегодня': b'0',
+    #         'Завтра': b'1',
+    #         'Послезавтра': b'2',
+    #         'Все': b'-1'
+    #     }
+    #
+    #     buttons = [[Button.inline(k, v)] for k, v in cinema_days_list.items()]
+    #
+    #     async with bot.conversation(chat_id) as conv:
+    #         await conv.send_message('Выберите дату',
+    #                                 buttons=buttons)
+    #
+    #         press = await conv.wait_event(press_event(sender_id))
+    #
+    #         for k, v in cinema_days_list.items():
+    #             if press.data == v:
+    #                 print(press.data)
+    #                 if press.data == b'-1':
+    #                     await send_cinema(event, bot)
+    #                 else:
+    #                     await send_cinema(event, bot, delta=int(v))
 
     @bot.on(events.NewMessage(pattern='/send_admin_message'))
     # Отправка массовой рассылки админом
