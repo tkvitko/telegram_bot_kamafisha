@@ -88,7 +88,7 @@ def get_news_from_db_by_category(category_id, date_limit):
         # WHERE (post_type='{POST_TYPE_NEWS}') AND
         # r.{TERM_ID_FIELD_NAME} = {category_id} AND
         # (post_date >='{date_limit} 00:00:00') AND
-        # (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
+        # (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
         # ) t1
         # INNER JOIN (
         # SELECT p.id, p.post_title, p.guid, m.meta_value, m.meta_key from {POSTS_TABLE} p
@@ -97,9 +97,9 @@ def get_news_from_db_by_category(category_id, date_limit):
         # WHERE (post_type='{POST_TYPE_NEWS}') AND
         # r.{TERM_ID_FIELD_NAME} = {category_id} AND
         # (post_date >='{date_limit} 00:00:00') AND
-        # (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
-        # ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
-        # WHERE t1.meta_key='_EventStartDate'
+        # (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
+        # ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDateUTC'
+        # WHERE t1.meta_key='_EventStartDateUTC'
         # ) t3 limit 5
         # '''
         query = f'''
@@ -147,7 +147,7 @@ def get_news_from_db_by_category_by_time(category_id, time_limit):
         WHERE (post_type='{POST_TYPE_NEWS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{time_limit}') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
         ) t1
         INNER JOIN (
         SELECT p.id, p.post_title, p.guid, m.meta_value, m.meta_key from {POSTS_TABLE} p
@@ -156,9 +156,9 @@ def get_news_from_db_by_category_by_time(category_id, time_limit):
         WHERE (post_type='{POST_TYPE_NEWS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{time_limit}') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
-        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
-        WHERE t1.meta_key='_EventStartDate'
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
+        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDateUTC'
+        WHERE t1.meta_key='_EventStartDateUTC'
         ) t3 limit 5
         '''
         cursor = connection.cursor()
@@ -198,7 +198,7 @@ def get_events_from_db_by_category(category_id, date_string, date_limit):
         WHERE (post_type='{POST_TYPE_EVENTS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
         ) t1
         INNER JOIN (
         SELECT p.id, p.post_title, p.guid, m.meta_value, m.meta_key from {POSTS_TABLE} p
@@ -207,9 +207,9 @@ def get_events_from_db_by_category(category_id, date_string, date_limit):
         WHERE (post_type='{POST_TYPE_EVENTS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
-        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
-        WHERE t1.meta_key='_EventStartDate'
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
+        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDateUTC'
+        WHERE t1.meta_key='_EventStartDateUTC'
         ) t3
         WHERE
         t3.end_date >='{date_string} 00:00:00'
@@ -255,16 +255,16 @@ def get_events_from_db_by_date(date_string, date_limit):
         JOIN {POSTMETA_TABLE} m ON p.id = m.post_id
         WHERE (post_type='{POST_TYPE_EVENTS}') AND 
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
         ) t1
         INNER JOIN (
         SELECT p.id, p.post_title, p.guid, m.meta_value, m.meta_key from {POSTS_TABLE} p
         JOIN {POSTMETA_TABLE} m ON p.id = m.post_id
         WHERE (post_type='{POST_TYPE_EVENTS}') AND 
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
-        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
-        WHERE t1.meta_key='_EventStartDate'
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
+        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDateUTC'
+        WHERE t1.meta_key='_EventStartDateUTC'
         ) t3
         WHERE 
         t3.start_date <='{date_string} 00:00:00' AND
@@ -305,7 +305,7 @@ def get_cinema_from_db_by_date(category_id, date_string, date_limit):
         WHERE (post_type='{POST_TYPE_EVENTS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
         ) t1
         INNER JOIN (
         SELECT p.id, p.post_title, p.guid, m.meta_value, m.meta_key from {POSTS_TABLE} p
@@ -314,9 +314,9 @@ def get_cinema_from_db_by_date(category_id, date_string, date_limit):
         WHERE (post_type='{POST_TYPE_EVENTS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
-        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
-        WHERE t1.meta_key='_EventStartDate'
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
+        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDateUTC'
+        WHERE t1.meta_key='_EventStartDateUTC'
         ) t3
         WHERE 
         t3.start_date <='{date_string} 23:59:59' AND
@@ -357,7 +357,7 @@ def get_cinema_from_db_all(category_id, date_limit):
         WHERE (post_type='{POST_TYPE_EVENTS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
         ) t1
         INNER JOIN (
         SELECT p.id, p.post_title, p.guid, m.meta_value, m.meta_key from {POSTS_TABLE} p
@@ -366,9 +366,9 @@ def get_cinema_from_db_all(category_id, date_limit):
         WHERE (post_type='{POST_TYPE_EVENTS}') AND
         r.{TERM_ID_FIELD_NAME} = {category_id} AND
         (post_date >='{date_limit} 00:00:00') AND
-        (m.meta_key = '_EventStartDate' OR m.meta_key = '_EventEndDate')
-        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDate'
-        WHERE t1.meta_key='_EventStartDate'
+        (m.meta_key = '_EventStartDateUTC' OR m.meta_key = '_EventEndDateUTC')
+        ) t2 ON t2.id = t1.id AND t2.meta_key='_EventEndDateUTC'
+        WHERE t1.meta_key='_EventStartDateUTC'
         ) t3
         '''
         cursor = connection.cursor()
@@ -387,6 +387,16 @@ if __name__ == '__main__':
     #print(len(get_cinema_from_db_all(date_limit='2020-07-01')))
     #print(get_events_from_db_by_category(category_id=122, date_string='2021-01-28', date_limit='2020-07-01'))
 
-    #print(get_events_from_db_by_date('2021-01-24', '2021-01-01'))
+    print(get_events_from_db_by_date('2021-11-05', '2021-01-01'))
 
-    print(get_news_from_db_by_category(1, '2021-01-01'))
+    # print(get_news_from_db_by_category(1, '2021-01-01'))
+
+    # Тестирование автоматической отправки
+    # from tg_bot import get_today
+    # from datetime import timedelta
+    # category_id = 5
+    # # category_id = 308
+    # time_from = get_today() - timedelta(hours=1)
+    # time_from = time_from.strftime('%Y-%m-%d %H:%M:%S')
+    # print(get_news_from_db_by_category_by_time(category_id=category_id,
+    #                                                      time_limit=time_from))
