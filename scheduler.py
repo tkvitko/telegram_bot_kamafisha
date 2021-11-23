@@ -15,7 +15,7 @@ from tg_bot import get_today, get_and_send_news, get_and_send_events, logger
 
 mongo_con_string = 'mongodb://localhost:27017'
 db_client = MongoClient(mongo_con_string)
-db = db_client['users_kamafisha']
+db = db_client['users_lefortovo']
 
 MAIN_NEWS_ID = 5
 BLOG_ID = 308
@@ -80,7 +80,8 @@ async def send_lefortovo(bot):
             users_list = db.users.find()
 
             # отправка сообщения всем пользователям сервиса:
-            for recipient in users_list:
+            for user in users_list:
+                recipient = user['_id']
                 try:
                     await bot.send_message(recipient, news_message)
                     logger.warning(f'Message has been sent to {recipient}')
