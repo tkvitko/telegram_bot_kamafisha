@@ -1,8 +1,16 @@
-**Телеграм бот для рассылки новостей и афиши**
+<h1>News Telegram bot</h1>
 
-Функциональность:
-- берет данные из MySQL базы данных,
-- формирует сообщение для пользователя,
-- кеширует сообщение в локальный кеш для ограничения запросов в базу данных,
-- рассылает информацию как по расписанию, так и по запросу пользователя,
-- хранит список пользователей в локальной Mongo для массовой рассылки.
+This bot sends news and events to his users
+
+<b>Functionality:</b>
+- takes data from source in MySQL database,
+- forms a message for user,
+- caches all formed messages in local MongoDB to reduce requests to the source,
+- sends info both by user's request and by schedule,
+- stores user's list for broadcast messaging.
+
+<b>Stack:</b>
+- Telethon (Telegram API)
+- pymongo
+- mysql.connector (with sshtunnel)
+- asyncio with aioschedule
