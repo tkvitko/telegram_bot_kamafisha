@@ -3,6 +3,7 @@ import configparser
 import mysql.connector
 import sshtunnel
 
+
 config = configparser.ConfigParser()
 config.read("config.ini")
 ssh_username = (config["ssh"]["ssh_username"])
@@ -12,11 +13,9 @@ sql_user = (config["mysql"]["user"])
 sql_password = (config["mysql"]["password"])
 sql_host = (config["mysql"]["host"])
 
-CINEMA_CAT_ID = 122
-
 
 def get_news_from_db():
-    # Получение новостей
+    """Getting news fom DB"""
 
     with sshtunnel.SSHTunnelForwarder(
             (ssh_host, 22),
@@ -52,7 +51,7 @@ def get_news_from_db():
 
 
 def get_events_from_db_by_category(category_id, date_string, date_limit):
-    # Получение событий по конкретной категории
+    """Getting events fom DB by category"""
 
     with sshtunnel.SSHTunnelForwarder(
             (ssh_host, 22),
@@ -103,7 +102,7 @@ def get_events_from_db_by_category(category_id, date_string, date_limit):
 
 
 def get_events_from_db_by_date(date_string, date_limit):
-    # Получение событий за конкретную дату
+    """Getting news fom DB for date"""
 
     with sshtunnel.SSHTunnelForwarder(
             (ssh_host, 22),
@@ -151,7 +150,7 @@ def get_events_from_db_by_date(date_string, date_limit):
 
 
 def get_cinema_from_db_by_date(category_id, date_string, date_limit):
-    # Получение событий по конкретной категории
+    """Getting cinemas fom DB by category"""
 
     with sshtunnel.SSHTunnelForwarder(
             (ssh_host, 22),
@@ -203,7 +202,7 @@ def get_cinema_from_db_by_date(category_id, date_string, date_limit):
 
 
 def get_cinema_from_db_all(category_id, date_limit):
-    # Получение событий по конкретной категории
+    """Getting cinemas fom DB"""
 
     with sshtunnel.SSHTunnelForwarder(
             (ssh_host, 22),
@@ -252,12 +251,10 @@ def get_cinema_from_db_all(category_id, date_limit):
 
 
 if __name__ == '__main__':
-    # Тестирование
-    #print(get_news_from_db(date_string='2020-12-18'))
-    #print(get_events_from_db_by_category(category_id=26, date_string='2021-01-24', date_limit='2020-07-01'))
-
+    # Testing
+    # print(get_news_from_db(date_string='2020-12-18'))
+    # print(get_events_from_db_by_category(category_id=26, date_string='2021-01-24', date_limit='2020-07-01'))
     print(get_cinema_from_db_by_date(122, date_string='2021-01-28', date_limit='2020-07-01'))
-    #print(len(get_cinema_from_db_all(date_limit='2020-07-01')))
-    #print(get_events_from_db_by_category(category_id=122, date_string='2021-01-28', date_limit='2020-07-01'))
-
-    #print(get_events_from_db_by_date('2021-01-24', '2021-01-01'))
+    # print(len(get_cinema_from_db_all(date_limit='2020-07-01')))
+    # print(get_events_from_db_by_category(category_id=122, date_string='2021-01-28', date_limit='2020-07-01'))
+    # print(get_events_from_db_by_date('2021-01-24', '2021-01-01'))

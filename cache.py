@@ -2,14 +2,11 @@ import os
 import pathlib
 import time
 
-CACHE_TIME = 24 * 60 * 60
-
-
-# CACHE_TIME = 60
+CACHE_TIME = 24 * 60 * 60   # a day
 
 
 def put_to_cache(data, data_type, date=None, category=None):
-    # Фукнция сохранения ответа в кеш
+    """Function to save data from answer to file cache"""
 
     if not category:
         # news, events
@@ -27,7 +24,7 @@ def put_to_cache(data, data_type, date=None, category=None):
 
 
 def get_from_cache(data_type, date=None, category=None):
-    # Функция взятия ответа из кеша с учетом устаревания
+    """Function to get data from file cache"""
 
     if not category:
         # news, events
@@ -38,16 +35,15 @@ def get_from_cache(data_type, date=None, category=None):
 
     try:
         file_props = pathlib.Path(cache_file)
-        # время создания кеша
-        creation_time = file_props.stat().st_mtime
-        # текущее время
-        current_time = time.time()
+        creation_time = file_props.stat().st_mtime  # the time when cache has been created
+        current_time = time.time()  # the current time
 
-        # если кеш устарел, данные не возвращаем
         if current_time - creation_time > CACHE_TIME:
+            # don't return data if cache is out of date
             data = None
             print(f'{data_type} for {date} are too old in {cache_file}')
         else:
+            # return data
             os.makedirs(f'cache/{data_type}', exist_ok=True)
             with open(cache_file, 'r') as f:
                 data = f.read()
@@ -56,12 +52,13 @@ def get_from_cache(data_type, date=None, category=None):
     except FileNotFoundError:
         data = None
 
-    # Если данные не вернули, основной модуль возьмет их из БД и запишет в кеш
+    # If no data has been returned from cache, the main module will get it from source and put to the cache
     return data
 
 
 if __name__ == '__main__':
-    # Тестирование
+
+    # Testing
     test_data = """Новости:"""
 
     # put_to_cache(data=test_data,

@@ -1,21 +1,20 @@
 #!/usr/bin/python3.6
 
 import asyncio
-import time
 import configparser
+import time
 
 import aioschedule as schedule
 from pymongo import MongoClient
 from telethon.sync import TelegramClient
 
+from bot_functions.strings import MONGO_CON_STRING
 from tg_bot import get_today, get_and_send_news, get_and_send_events
 
-
-mongo_con_string = 'mongodb://localhost:27017'
-db_client = MongoClient(mongo_con_string)
+db_client = MongoClient(MONGO_CON_STRING)
 db = db_client['users_kamafisha']
 
-# Расписание автоматических рассылок
+# Auto notifications schedule
 TIME_TO_SEND_NEWS = '10:00'
 
 
@@ -23,27 +22,26 @@ TIME_TO_SEND_NEWS = '10:00'
 
 
 async def send_news(bot):
-    # Отправка новостей
+    """Sending news"""
 
     request_date = get_today()
     users_list = db.users.find()
-
     for recipient in users_list:
         await get_and_send_news(bot=bot, user=recipient['_id'], date=request_date.strftime('%Y-%m-%d'))
 
 
 async def send_events(bot):
-    # Отправка мероприятий
+    """Sending events"""
 
     request_date = get_today()
     users_list = db.users.find()
-
     for recipient in users_list:
         await get_and_send_events(bot=bot, user=recipient['_id'], date=request_date.strftime('%Y-%m-%d'))
 
 
 if __name__ == '__main__':
 
+    # Load configuration
     config = configparser.ConfigParser()
     config.read("config.ini")
     bot_token = (config["bot"]["bot_token"])
